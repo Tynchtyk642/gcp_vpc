@@ -1,0 +1,108 @@
+version: 2
+
+
+jobs:
+  plan_to_deploy:
+    working_directory: /terraform
+    docker: 
+      - image: hashicorp/terraform  
+
+    steps:
+      - checkout 
+      - run:
+          name: "init"
+          command: terraform init
+
+      - run:
+          name: "plan"
+          command: terraform plan    
+  
+  deploy:
+    working_directory: /terraform
+    docker: 
+      - image: hashicorp/terraform  
+
+    steps:
+      - checkout 
+      - run:
+          name: "init"
+          command: terraform init
+
+      - run:
+          name: "apply"
+          command: terraform apply --auto-approve 
+          
+  plan_to_destroy:
+    docker:
+      - image: hashicorp/terraform
+    working_directory: /terraform
+    steps:
+      - checkout
+      - run:
+          name: Init
+          command: terraform init -input=false
+      - run:
+          name: Plan
+          command: terraform plan -destroy -input=false -out=tfplan -no-color
+      - run:
+          name: Render plan for PR comment
+          command: terraform show -no-color tfplan > tfplan.txt
+      - persist_to_workspace:
+          root: /terraform
+          paths:
+            - .    
+   
+  destroy:
+    docker:
+      - image: hashicorp/terraform
+    working_directory: /terraform
+    steps:
+      - attach_workspace:
+          at: /terraform
+      - run:
+          name: destroy
+          command: terraform apply tfplan
+          
+  
+workflows:
+  version: 2
+  deploy_destroy:
+    jobs:
+      - plan_to_deploy:
+          context: GOOGLE_CREDENTIALS 
+      
+      - hold:
+          type:  approval
+      
+      - deploy:
+          context: GOOGLE_CREDENTIALS 
+          requires:
+            - plan_to_deploy
+            - hold
+      
+      - plan_to_destroy:
+          context: GOOGLE_CREDENTIALS
+          requires:
+            - deploy
+      
+      - approve_to_destroy1:
+          type:  approval
+          requires:
+            - plan_to_destroy
+      
+      - are_you_shure_to_destroy:
+          type:  approval
+          requires:
+            - approve_to_destroy1
+       
+      - destroy:
+          context: GOOGLE_CREDENTIALS 
+          requires:
+            
+            - approve_to_destroy1
+            - are_you_shure_to_destroy
+          
+          
+
+
+            
