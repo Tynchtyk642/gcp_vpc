@@ -11,6 +11,7 @@
     - Public Subnet open to all externall traffic (for ***"public"*** tagged resource)
     - Application Subnet receive traffic from private IPs originating from the Public Subnet (to resource tagged ***"application"***)
     - Database Subnet receive traffic from private IPs originating from the Application Subnet (to resource tagged ***"database"***)
+4. ### NAT-GW with Router
 
 ## **Diagram**
 
@@ -19,89 +20,94 @@
 ## **Usage**
 ```terraform
 provider "google" {
+  credentials = file(var.credentials_file_path)
+
   project = var.project_id
   region  = var.region
-  zone    = var.zone
-
-  credentials = file(var.credentials_file)
+  zone    = var.main_zone
 }
 
+module "google_networks" {
+  source = "./networks"
 
-module "network" {
-  source                          = "./network"
-  delete_default_routes_on_create = true
+  nat_subnet_name = "application-subnet"
 
+  #==========================SUBNETS=============================
   subnets = [
     {
       subnet_name     = "presentation-subnet"
-      subnet_ip_range = "10.0.1.0/24"
+      subnet_ip_range = var.presentation_ip_range
       subnet_region   = "us-central1"
     },
     {
       subnet_name           = "application-subnet"
-      subnet_ip_range       = "10.0.2.0/24"
+      subnet_ip_range       = var.application_ip_range
       subnet_region         = "us-central1"
       subnet_private_access = true
     },
     {
       subnet_name           = "database-subnet"
-      subnet_ip_range       = "10.0.3.0/24"
+      subnet_ip_range       = var.database_ip_range
       subnet_region         = "us-central1"
       subnet_private_access = true
     },
+
   ]
+
+
+  #============================ROUTES=============================
 
   routes = [
     {
       name              = "igw-route"
-      destination_range = "0.0.0.0/0"
-      tags              = "public"
+      destination_range = var.igw_destination
       next_hop_internet = "true"
-    }
+    },
   ]
 
+  #=========================FIREWALL-RULES========================
   firewall_rules = [
-  {
-    name        = "presentation-firewall-rule"
-    direction   = "INGRESS"
-    ranges      = ["10.0.1.0/24"]
-    target_tags = ["public"]
-    source_tags = null
+    {
+      name        = "presentation-firewall-rule"
+      direction   = "INGRESS"
+      ranges      = var.presentation_firewall_ranges
+      target_tags = ["public"]
+      source_tags = null
 
-    allow = [ {
-      protocol = "all"
-      ports    = null
-    }]
-    deny = []
-  },
-  {
-    name        = "application-firewall-rule"
-    direction   = "INGRESS"
-    ranges      = ["10.0.2.0/24"]
-    target_tags = ["application"]
-    source_tags = null
+      allow = [{
+        protocol = "tcp"
+        ports    = ["22"]
+      }]
+      deny = []
+    },
+    {
+      name        = "application-db-firewall-rule"
+      direction   = "INGRESS"
+      ranges      = var.application_firewall_ranges
+      target_tags = ["application", "database"]
+      source_tags = null
 
-    allow = [{
-      protocol = "all"
-      ports    = null
-    }]
-    deny = []
-    
-  },
-  {
-    name        = "database-firewall-rule"
-    direction   = "INGRESS"
-    ranges      = ["10.0.3.0/24"]
-    source_tags = null
-    target_tags = ["database"]
+      allow = [{
+        protocol = "all"
+        ports    = null
+      }]
+      deny = []
 
-    allow = [{
-      protocol = "all"
-      ports    = null
-    }]
-    deny = []
-  },
-]
+    },
+    {
+      name        = "database-firewall-rule"
+      direction   = "INGRESS"
+      ranges      = var.database_firewall_ranges
+      source_tags = null
+      target_tags = ["database"]
+
+      allow = [{
+        protocol = "all"
+        ports    = null
+      }]
+      deny = []
+    }
+  ]
 }
 
 ```
