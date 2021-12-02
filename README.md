@@ -109,7 +109,7 @@ module "network" {
 Then perform the following commands on the root folder:
 - `terraform init` terraofrm initialization
 - `terraform plan` to see the infrastructure plan
-- `therraform apply` to apply infastructure build
+- `terraform apply` to apply infastructure build
 - `terraform destroy` to destroy the build infastructure
 
 ## **Inputs to variables.tf**
