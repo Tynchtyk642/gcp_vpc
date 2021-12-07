@@ -1,5 +1,5 @@
 output "vpc_name" {
-  value = google_compute_network.vpc.name
+  value = google_compute_network.vpc.id
 }
 
 output "subnet_name" {
@@ -9,4 +9,5 @@ output "subnet_name" {
 # output "subnet_region" {
 #   value = [for subnet in google_compute_subnetwork.subnets : subnet.region]
 # }
+
 

@@ -1,0 +1,5 @@
+.terraform
+.terraform.lock.hcl
+playground-s-11-94e9d5cd-e5e3f1174e09.json
+terraform.tfstate
+terraform.tfstate.backup

@@ -1,14 +1,7 @@
-terraform {
-  #   backend "gcs" {
-  #       bucket = ""
-  #       prefix = ""
-  #   }
-  required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = "3.53.0"
-    }
-  }
+provider "google-beta" {
+  credentials = file(var.credentials_file_path)
+  project = var.project_id
+  region  = var.region
 }
 
 provider "google" {
@@ -37,13 +30,6 @@ module "google_networks" {
       subnet_region         = "us-central1"
       subnet_private_access = true
     },
-    {
-      subnet_name           = "database-subnet"
-      subnet_ip_range       = var.database_ip_range
-      subnet_region         = "us-central1"
-      subnet_private_access = true
-    },
-
   ]
 
 
@@ -76,7 +62,7 @@ module "google_networks" {
       name        = "application-db-firewall-rule"
       direction   = "INGRESS"
       ranges      = var.application_firewall_ranges
-      target_tags = ["application", "database"]
+      target_tags = ["application"]
       source_tags = null
 
       allow = [{
@@ -86,18 +72,5 @@ module "google_networks" {
       deny = []
 
     },
-    {
-      name        = "database-firewall-rule"
-      direction   = "INGRESS"
-      ranges      = var.database_firewall_ranges
-      source_tags = null
-      target_tags = ["database"]
-
-      allow = [{
-        protocol = "all"
-        ports    = null
-      }]
-      deny = []
-    }
   ]
 }

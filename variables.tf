@@ -28,15 +28,8 @@ variable "presentation_ip_range" {
 variable "application_ip_range" {
   description = "IP range of Application subnetwork"
   type        = string
-  default     = "10.101.0.0/16"
+  default     = "10.101.0.0/24"
 }
-#----------------------------------- DATABASE ------------------------------------------
-variable "database_ip_range" {
-  description = "IP range of Database subnetwork"
-  type        = string
-  default     = "10.102.0.0/16"
-}
-
 
 #================================== ROUTES VARIABLE ====================================
 variable "igw_destination" {
@@ -62,12 +55,4 @@ variable "application_firewall_ranges" {
   description = "If direction <INGRESS> are specified, the firewall will apply only to traffic that has source IP address in these ranges. If direction <EGRESS>  are specified, the firewall will apply only to traffic that has destination IP address in these ranges."
   type        = list(string)
   default     = ["10.100.0.0/16"]
-}
-
-
-#------------------------------ DATABASE FIREWALL --------------------------------------
-variable "database_firewall_ranges" {
-  description = "If direction <INGRESS> are specified, the firewall will apply only to traffic that has source IP address in these ranges. If direction <EGRESS>  are specified, the firewall will apply only to traffic that has destination IP address in these ranges."
-  type        = list(string)
-  default     = ["10.101.0.0/16"]
 }

@@ -4,3 +4,5 @@ output "vpc_name" {
 output "subnet" {
   value = module.google_networks.subnet_name
 }
+
+
