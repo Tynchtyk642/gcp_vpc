@@ -23,12 +23,14 @@ module "google_networks" {
       subnet_name     = "presentation-subnet"
       subnet_ip_range = var.presentation_ip_range
       subnet_region   = "us-central1"
+      subnet_flow_logs = true
     },
     {
       subnet_name           = "application-subnet"
       subnet_ip_range       = var.application_ip_range
       subnet_region         = "us-central1"
       subnet_private_access = true
+      subnet_flow_logs = true
     },
   ]
 
