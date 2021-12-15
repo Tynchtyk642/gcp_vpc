@@ -32,7 +32,7 @@ module "google_networks" {
       subnet_private_access = true
       subnet_flow_logs = true
     },
-  ]
+      ]
 
 
   #============================ROUTES=============================
@@ -53,6 +53,7 @@ module "google_networks" {
       ranges      = var.presentation_firewall_ranges
       target_tags = ["public"]
       source_tags = null
+      target_service_accounts = null
 
       allow = [{
         protocol = "tcp"
@@ -66,13 +67,26 @@ module "google_networks" {
       ranges      = var.application_firewall_ranges
       target_tags = ["application"]
       source_tags = null
+      target_service_accounts = null
 
       allow = [{
         protocol = "all"
         ports    = null
       }]
       deny = []
-
     },
+    {
+      name = "ingress-to-cluster"
+      direction = "INGRESS"
+      target_tags = null
+      target_service_accounts = null
+      source_tags = ["public"]
+      ranges = null
+      allow = [{
+        protocol = "tcp"
+        ports = ["22"]
+      }]
+      deny = []
+    }
   ]
 }
