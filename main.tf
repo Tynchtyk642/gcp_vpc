@@ -1,14 +1,7 @@
-terraform {
-  #   backend "gcs" {
-  #       bucket = ""
-  #       prefix = ""
-  #   }
-  required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = "3.53.0"
-    }
-  }
+provider "google-beta" {
+  credentials = file(var.credentials_file_path)
+  project = var.project_id
+  region  = var.region
 }
 
 provider "google" {
@@ -30,21 +23,16 @@ module "google_networks" {
       subnet_name     = "presentation-subnet"
       subnet_ip_range = var.presentation_ip_range
       subnet_region   = "us-central1"
+      subnet_flow_logs = true
     },
     {
       subnet_name           = "application-subnet"
       subnet_ip_range       = var.application_ip_range
       subnet_region         = "us-central1"
       subnet_private_access = true
+      subnet_flow_logs = true
     },
-    {
-      subnet_name           = "database-subnet"
-      subnet_ip_range       = var.database_ip_range
-      subnet_region         = "us-central1"
-      subnet_private_access = true
-    },
-
-  ]
+      ]
 
 
   #============================ROUTES=============================
@@ -65,6 +53,7 @@ module "google_networks" {
       ranges      = var.presentation_firewall_ranges
       target_tags = ["public"]
       source_tags = null
+      target_service_accounts = null
 
       allow = [{
         protocol = "tcp"
@@ -76,26 +65,26 @@ module "google_networks" {
       name        = "application-db-firewall-rule"
       direction   = "INGRESS"
       ranges      = var.application_firewall_ranges
-      target_tags = ["application", "database"]
+      target_tags = ["application"]
       source_tags = null
+      target_service_accounts = null
 
       allow = [{
         protocol = "all"
         ports    = null
       }]
       deny = []
-
     },
     {
-      name        = "database-firewall-rule"
-      direction   = "INGRESS"
-      ranges      = var.database_firewall_ranges
-      source_tags = null
-      target_tags = ["database"]
-
+      name = "ingress-to-cluster"
+      direction = "INGRESS"
+      target_tags = null
+      target_service_accounts = null
+      source_tags = ["public"]
+      ranges = null
       allow = [{
-        protocol = "all"
-        ports    = null
+        protocol = "tcp"
+        ports = ["22"]
       }]
       deny = []
     }
