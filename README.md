@@ -2,16 +2,16 @@
 
 ## This codes create:
 
-1. ### VPC with 3 Subnetwork:
+1. ### VPC with allocated Private IP range for peering with Cloud SQL.
+2. ### Subnetwork:
     - _Presentation Subnetwork (public)_
     - _Application Subnetwork (private)_
     - _Database Subnetwork (private)_
-2. ### Route to IGW (egress to internet from resource tagged ***"public"***)
-3. ### Three Firewall Rules:
+3. ### Route to IGW (egress to internet from resource tagged ***"public"***)
+4. ### Three Firewall Rules:
     - Public Subnet open to all externall traffic (for ***"public"*** tagged resource)
     - Application Subnet receive traffic from private IPs originating from the Public Subnet (to resource tagged ***"application"***)
-    - Database Subnet receive traffic from private IPs originating from the Application Subnet (to resource tagged ***"database"***)
-4. ### NAT-GW with Router
+5. ### NAT-GW with Router
 
 ## **Diagram**
 
@@ -19,6 +19,12 @@
     
 ## **Usage**
 ```terraform
+provider "google-beta" {
+  credentials = file(var.credentials_file_path)
+  project = var.project_id
+  region  = var.region
+}
+
 provider "google" {
   credentials = file(var.credentials_file_path)
 
@@ -38,21 +44,16 @@ module "google_networks" {
       subnet_name     = "presentation-subnet"
       subnet_ip_range = var.presentation_ip_range
       subnet_region   = "us-central1"
+      subnet_flow_logs = true
     },
     {
       subnet_name           = "application-subnet"
       subnet_ip_range       = var.application_ip_range
       subnet_region         = "us-central1"
       subnet_private_access = true
+      subnet_flow_logs = true
     },
-    {
-      subnet_name           = "database-subnet"
-      subnet_ip_range       = var.database_ip_range
-      subnet_region         = "us-central1"
-      subnet_private_access = true
-    },
-
-  ]
+      ]
 
 
   #============================ROUTES=============================
@@ -73,6 +74,7 @@ module "google_networks" {
       ranges      = var.presentation_firewall_ranges
       target_tags = ["public"]
       source_tags = null
+      target_service_accounts = null
 
       allow = [{
         protocol = "tcp"
@@ -81,29 +83,29 @@ module "google_networks" {
       deny = []
     },
     {
-      name        = "application-db-firewall-rule"
+      name        = "application-firewall-rule"
       direction   = "INGRESS"
       ranges      = var.application_firewall_ranges
-      target_tags = ["application", "database"]
+      target_tags = ["application"]
       source_tags = null
+      target_service_accounts = null
 
       allow = [{
         protocol = "all"
         ports    = null
       }]
       deny = []
-
     },
     {
-      name        = "database-firewall-rule"
-      direction   = "INGRESS"
-      ranges      = var.database_firewall_ranges
-      source_tags = null
-      target_tags = ["database"]
-
+      name = "ingress-to-cluster"
+      direction = "INGRESS"
+      target_tags = null
+      target_service_accounts = null
+      source_tags = ["public"]
+      ranges = null
       allow = [{
-        protocol = "all"
-        ports    = null
+        protocol = "tcp"
+        ports = ["22"]
       }]
       deny = []
     }

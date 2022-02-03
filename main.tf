@@ -62,7 +62,7 @@ module "google_networks" {
       deny = []
     },
     {
-      name        = "application-db-firewall-rule"
+      name        = "application-firewall-rule"
       direction   = "INGRESS"
       ranges      = var.application_firewall_ranges
       target_tags = ["application"]
