@@ -2,11 +2,10 @@
 
 ## This codes create:
 
-1. ### VPC with allocated Private IP range for peering with Cloud SQL.
+1. ### VPC with allocated Private IP range for private connection with Cloud SQL.
 2. ### Subnetwork:
     - _Presentation Subnetwork (public)_
     - _Application Subnetwork (private)_
-    - _Database Subnetwork (private)_
 3. ### Route to IGW (egress to internet from resource tagged ***"public"***)
 4. ### Three Firewall Rules:
     - Public Subnet open to all externall traffic (for ***"public"*** tagged resource)
