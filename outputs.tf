@@ -1,6 +1,10 @@
-output "vpc_name" {
-  value = module.google_networks.vpc_name
+output "vpc_id" {
+  description = "VPC ID."
+  value = module.google_networks.vpc_id
 }
 output "subnet" {
+  description = "Subnets name"
   value = module.google_networks.subnet_name
 }
+
+

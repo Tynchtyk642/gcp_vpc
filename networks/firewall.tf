@@ -8,6 +8,7 @@ resource "google_compute_firewall" "rules" {
   destination_ranges = each.value.direction == "EGRESS" ? each.value.ranges : null
   source_tags        = each.value.source_tags
   target_tags        = each.value.target_tags
+  target_service_accounts = each.value.target_service_accounts
 
   dynamic "allow" {
     for_each = lookup(each.value, "allow", [])
